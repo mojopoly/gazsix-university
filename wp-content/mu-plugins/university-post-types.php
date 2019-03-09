@@ -2,6 +2,8 @@
 function university_post_types() {
     //Campus Post Type
         register_post_type('campus', array(
+            'capability_type' => 'campus',
+            'map_meta_cap' => true,
             'supports' => array('title', 'editor', 'excerpt'),
             'rewrite' => array('slug' => 'campuses'),
             'has_archive' => true,
@@ -18,6 +20,8 @@ function university_post_types() {
     
     //Event Post Type
     register_post_type('event', array(
+        'capability_type' => 'event', //by default type is post, this line is to grant custom user permission to only modify events
+        'map_meta_cap' => true, //this line is required to activate the top line
         'supports' => array('title', 'editor', 'excerpt'),
         'rewrite' => array('slug' => 'events'),
         'has_archive' => true,
@@ -35,7 +39,7 @@ function university_post_types() {
     //Program Post Type
 
     register_post_type('program', array(
-        'supports' => array('title', 'editor'),
+        'supports' => array('title'), //we removed 'editor', which is the 2nd argument to remove content field
         'rewrite' => array('slug' => 'programs'),
         'has_archive' => true,
         'public' => true,
@@ -65,6 +69,26 @@ function university_post_types() {
                 'singular_name' => 'Professor'
             ),
             'menu_icon' => 'dashicons-welcome-learn-more'
+        ));
+
+        
+        //Note Post Type
+
+        register_post_type('note', array(
+            'show_in_rest' => true, //this will show this custom post type in rest API url
+            'supports' => array('title', 'editor'),
+            // 'rewrite' => array('slug' => 'professors'),
+            // 'has_archive' => true, we dont need archive for professors as its not its own menu item, its related to programs
+            'public' => false, //we wants our notes to be private for each user account; setting it to false wont show notes in public queries or search results
+            'show_ui' => true, //above line will also hide my-notes from nav bar, and this line will bring it back to business
+            'labels' => array(
+                'name' => 'Notes',
+                'add_new_item' => 'Add New Note',
+                'edit_item' => 'Edit Note',
+                'all_items' => 'All Notes',
+                'singular_name' => 'Note'
+            ),
+            'menu_icon' => 'dashicons-welcome-write-blog'
         ));
 }
 

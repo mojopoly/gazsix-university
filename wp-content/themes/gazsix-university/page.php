@@ -3,8 +3,8 @@
     while(have_posts()) {
         the_post();
         pageBanner(array(
-          'title' => 'hello there this is the title',
-          'subtitle' => 'this is the subtitle',
+          // 'title' => 'hello there this is the title',
+          // 'subtitle' => 'this is the subtitle',
           // 'photo' => 
         ));
         ?>
