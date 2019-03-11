@@ -2,14 +2,17 @@
 //reasons to create your own new REST API URL: custom search logic with relationships, respond with less JSON data for faster loading, send
 //only 1 getJSON request instead of 6 in our JS, -->  the function for creating this is inside inc folder; below we are requiring it
 require get_theme_file_path('/inc/search-route.php');
+require get_theme_file_path('/inc/like-route.php');
 
 
-
-function university_custom_rest() {//this function adds new custom field to wp api
+function university_custom_rest() {//this function adds new custom field to wp api, post by default doesnt exist as it is a custom field
     register_rest_field('post','authorName',array(
         'get_callback' => function() {return get_the_author();}
     ));
     //add new rest fields here
+    register_rest_field('note','userNoteCount',array(
+        'get_callback' => function() {return count_user_posts(get_current_user_id(), 'note');}//this will return a new property named userNoteCount in update note response 
+    ));
 }
 add_action('rest_api_init', 'university_custom_rest'); //first argument is the wp function that we want to hook onto
 //create a recycleable function for page banners and is flexible depedning on input; use get_template_part for 
@@ -48,6 +51,7 @@ function university_files() {
     wp_enqueue_style('university_main_styles', get_stylesheet_uri(), NULL, microtime());
     wp_localize_script('main-university-js', 'universityData', array( //this function will make our JSON API request flexible so it runs on every machine
         'root_url' => get_site_url(),
+        'nonce' => wp_create_nonce('wp_rest')
     ));
 }
 add_action('wp_enqueue_scripts', 'university_files');
@@ -152,3 +156,25 @@ function ourLoginTitle() {
     return get_bloginfo('name');
 }
 add_filter('login_headertitle', 'ourLoginTitle');
+
+
+// force note posts to be private
+function makeNotePrivate($data, $postarr) { //$data is the data the will be passed thru the filter, postarr contains other info such as post id 
+    // print_r($data);
+    if($data['post_type']== 'note') { //this if statement to make sure subscribers cant post ANY html in dB
+        if(count_user_posts(get_current_user_id(), 'note') > 4 AND !$postarr['ID']) {//set max no of notes per user, we nest this if statement inside since wp_inser_post will run for EVERY post tyep, we only want for note post types 
+            die("You have reached your note limit.");
+        }
+        $data['post_content'] =sanitize_textarea_field($data['post_content']); //sanitize content from ALL html content
+        $data['post_title'] =sanitize_text_field($data['post_title']); //sanitize title    from ALL html title    
+    }
+    if($data['post_type'] == 'note' AND $data['post_status'] != 'trash') { //we still want to let users to delete posts
+        $data['post_status'] = 'private'; //this is setting post status publish to private on the server side
+
+    }
+    return $data;
+}
+
+add_filter('wp_insert_post_data','makeNotePrivate', 10, 2); //2 means that we want makeNotePrivate to work with parameters(data, postarray). 10 is the priority number that you wanna set on makeNotePrivate if multiple funcyions are hooked to wp_insert_post_data, lower the number the earlier it'll run
+
+

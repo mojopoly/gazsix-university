@@ -11,6 +11,42 @@
                     <?php the_post_thumbnail('professorPortrait'); ?>
                 </div>
                 <div class= "two-thirds">
+                    <?php
+                        $likeCount = new WP_Query(array( //this custom query will fetch all like post types that match post id and liked professor, we will need to display this in html in like-count class
+                            'post_type' => 'like',
+                            'meta_query' =>  array(//we need meta qeury , cuz we only wanna pull in like posts where the liked professor id value macthes the page that we're currently viewing 
+                                array(
+                                    'key'=> 'liked_professor_id',
+                                    'compare' => '=', //we're looking for an exact match
+                                    'value' => get_the_ID()
+                                )
+
+                            )   
+                        ));
+                        //following query to show filled heart if current user has liked a proff
+                        $existStatus = 'no';
+                        $existQuery = new WP_Query(array( 
+                            'author' => get_current_user_id(),
+                            'post_type' => 'like',
+                            'meta_query' =>  array(
+                                array(
+                                    'key'=> 'liked_professor_id',
+                                    'compare' => '=', 
+                                    'value' => get_the_ID()
+                                )
+
+                            )   
+                        ));
+                        if ($existQuery->found_posts) {
+                            $existStatus ='yes';
+                        }
+                    //in data-exists below, we have set the css in a way that if $existStatus is yes, then the heart like will fill-up
+                    ?>
+                    <span class="like-box" data-professor="<?php the_ID(); ?>" data-exists="<?php echo $existStatus; ?>">
+                        <i class="fa fa-heart-o" aria-hidden="true"></i>
+                        <i class="fa fa-heart" aria-hidden="true"></i>
+                        <span class="like-count"><?php echo $likeCount->found_posts; ?></span> 
+                    </span>
                     <?php the_content(); ?>
                 </div>
             </div>
