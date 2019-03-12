@@ -23,26 +23,29 @@
 
                             )   
                         ));
-                        //following query to show filled heart if current user has liked a proff
                         $existStatus = 'no';
-                        $existQuery = new WP_Query(array( 
-                            'author' => get_current_user_id(),
-                            'post_type' => 'like',
-                            'meta_query' =>  array(
-                                array(
-                                    'key'=> 'liked_professor_id',
-                                    'compare' => '=', 
-                                    'value' => get_the_ID()
-                                )
-
-                            )   
-                        ));
-                        if ($existQuery->found_posts) {
-                            $existStatus ='yes';
+                        if(is_user_logged_in()) { //without this if statement, anonymouse users would see data-exists=yes/aka, filled heart; reason is if user user isnt logged in, author line below will result in 0, which will be treated as non-existent and rest of array will run
+                            //following query to show filled heart if current user has liked a prof
+                            $existQuery = new WP_Query(array( 
+                                'author' => get_current_user_id(),
+                                'post_type' => 'like',
+                                'meta_query' =>  array(
+                                    array(
+                                        'key'=> 'liked_professor_id',
+                                        'compare' => '=', 
+                                        'value' => get_the_ID()
+                                    )
+                                )   
+                            ));
+                            if ($existQuery->found_posts) {
+                                $existStatus ='yes';
+                            }
                         }
+
                     //in data-exists below, we have set the css in a way that if $existStatus is yes, then the heart like will fill-up
+                    //in data-like below, we create this attribute to let ajax delete call know which like post to delete, by getting its ID
                     ?>
-                    <span class="like-box" data-professor="<?php the_ID(); ?>" data-exists="<?php echo $existStatus; ?>">
+                    <span class="like-box" data-like="<?php echo $existQuery->posts[0]->ID;?>" data-professor="<?php the_ID(); ?>" data-exists="<?php echo $existStatus; ?>">
                         <i class="fa fa-heart-o" aria-hidden="true"></i>
                         <i class="fa fa-heart" aria-hidden="true"></i>
                         <span class="like-count"><?php echo $likeCount->found_posts; ?></span> 
